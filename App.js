@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useMemo} from "react";
 import AsyncStorage from "@react-native-community/async-storage";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 
@@ -29,6 +29,9 @@ export default function App(){
     setNome(input);
     setInput('')
   }
+  const letrasNome = useMemo(()=>{
+    return nome.length;
+  }, [nome])
   return(
     <View style={styles.container}>
 
@@ -41,6 +44,7 @@ export default function App(){
         <Text style={styles.btnText}>Altera Nome</Text>
       </TouchableOpacity>
       <Text style={styles.texto}>{nome}</Text>
+      <Text style={styles.texto}>Tem {letrasNome} letras.</Text>
     </View>
   )
 }
