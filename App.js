@@ -1,80 +1,126 @@
-import React, {useState, useEffect, useMemo, useRef} from "react";
-import AsyncStorage from "@react-native-community/async-storage";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import React, { useState, useRef } from 'react';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Keyboard} from 'react-native';
+import api from './src/services/api';
 
 export default function App(){
+  const [cep, setCep] = useState('');
+  const inputRef = useRef(null);
+  const [cepUser, setCepUser] = useState(null);
 
-  const [nome, setNome] = useState('');
 
-  const [input, setInput] = useState('');
-
-  const nomeInput = useRef(null)
-
-  useEffect(()=>{
-    async function getStorage(){
-   const nomeStorage = await AsyncStorage.getItem('nomes');
-    if(nomeStorage !== null){
-      setNome(nomeStorage)
+  async function buscar(){
+    if(cep == ''){
+      alert('Digite um cep valido');
+      setCep('');
+      return; //
     }
-  }
-  getStorage()
-}, []);
 
-  useEffect(()=>{
-    async function saveStorage(){
-      await AsyncStorage.setItem('nomes', nome);
+    try{
+      const response = await api.get(`/${cep}/json`);
+      console.log(response.data);
+      setCepUser(response.data);
+      Keyboard.dismiss(); //Garantir que o teclado sera fechado!
+
+    }catch(error){
+      console.log('ERROR: ' + error);
     }
-    saveStorage();
-  },[nome])
 
-  function alteraNome(){
-    setNome(input);
-    setInput('')
+
   }
 
-  function novoNome(){
-    nomeInput.current.focus();
+  function limpar(){
+    setCep('');
+    inputRef.current.focus();
+    setCepUser(null);
   }
 
-  const letrasNome = useMemo(()=>{
-    return nome.length;
-  }, [nome])
   return(
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <View style={{alignItems: 'center'}}>
+        <Text style={styles.text}>Digite o cep desejado</Text>
+        <TextInput
+        style={styles.input}
+        placeholder="Ex: 79003241"
+        value={cep}
+        onChangeText={ (texto) => setCep(texto) }
+        keyboardType="numeric"
+        ref={inputRef}
+        />
+      </View>
 
-      <TextInput
-      placeholder="Seu nome..."
-      value={input}
-      onChangeText={(texto) => setInput(texto)}
-      ref={nomeInput}
-      />
-      <TouchableOpacity style={styles.btn} onPress={alteraNome}>
-        <Text style={styles.btnText}>Altera Nome</Text>
-      </TouchableOpacity>
-      <Text style={styles.texto}>{nome}</Text>
-      <Text style={styles.texto}>Tem {letrasNome} letras.</Text>
+      <View style={styles.areaBtn}>
+        <TouchableOpacity 
+        style={[styles.botao, { backgroundColor: '#1d75cd' }]}
+        onPress={ buscar }
+        >
+          <Text style={styles.botaoText}>Buscar</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={novoNome}>
-        <Text>Novo nome</Text>
-      </TouchableOpacity>
-    </View>
-  )
+        <TouchableOpacity 
+        style={[styles.botao, { backgroundColor: '#cd3e1d' }]}
+        onPress={ limpar }
+        >
+          <Text style={styles.botaoText}>Limpar</Text>
+        </TouchableOpacity>
+      </View>
+
+
+      { cepUser &&
+        <View style={styles.resultado}>
+          <Text style={styles.itemText}>CEP: {cepUser.cep}</Text>
+          <Text style={styles.itemText}>Logradouro: {cepUser.logradouro}</Text>
+          <Text style={styles.itemText}>Bairro: {cepUser.bairro}</Text>
+          <Text style={styles.itemText}>Cidade: {cepUser.localidade}</Text>
+          <Text style={styles.itemText}>Estado: {cepUser.uf}</Text>
+        </View>
+      }
+
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
   container:{
-    flex: 1,
-    marginTop: 15
+    flex:1,
   },
-  texto:{
-    color: '#000',
-    fontSize: 35
+  text:{
+    marginTop: 25,
+    marginBottom: 15,
+    fontSize: 25,
+    fontWeight: 'bold'
   },
-  btn:{
-    color: 'black',
-    alignItems: 'center'
+  input:{
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 5,
+    width: '90%',
+    padding: 10,
+    fontSize: 18
   },
-  btnText:{
-    color: 'red'
+  areaBtn:{
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: 15,
+    justifyContent: 'space-around'
+  },
+  botao:{
+   height: 50,
+   justifyContent: 'center',
+   alignItems: 'center',
+   padding: 15,
+   borderRadius: 5,
+  },
+  botaoText:{
+    fontSize: 22,
+    color:'#FFF'
+  },
+  resultado:{
+    flex:1,
+    justifyContent:'center',
+    alignItems:'center'
+  },
+  itemText:{
+    fontSize: 22,
   }
-})
+});
