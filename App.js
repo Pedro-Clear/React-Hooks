@@ -1,11 +1,29 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
+import AsyncStorage from "@react-native-community/async-storage";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 
 export default function App(){
 
-  const [nome, setNome] = useState('Ricardo');
+  const [nome, setNome] = useState('');
 
   const [input, setInput] = useState('');
+
+  useEffect(()=>{
+    async function getStorage(){
+   const nomeStorage = await AsyncStorage.getItem('nomes');
+    if(nomeStorage !== null){
+      setNome(nomeStorage)
+    }
+  }
+  getStorage()
+}, []);
+
+  useEffect(()=>{
+    async function saveStorage(){
+      await AsyncStorage.setItem('nomes', nome);
+    }
+    saveStorage();
+  },[nome])
 
   function alteraNome(){
     setNome(input);
@@ -36,11 +54,11 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 35
   },
-  bnt:{
-    color: '#222',
+  btn:{
+    color: 'black',
     alignItems: 'center'
   },
   btnText:{
-    color: '#fff'
+    color: 'red'
   }
 })
